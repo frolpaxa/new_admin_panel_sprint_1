@@ -18,6 +18,7 @@ PG_DSN = {
 }
 
 SQLITE_DB_PATH = "db.sqlite"
+SLICE_LENGTH = 50
 
 
 @dataclass
@@ -76,22 +77,24 @@ class PostgresSaver:
     def __init__(self, pg_conn: _connection) -> None:
         self.pg_conn = pg_conn
 
-    def save_data(self, data, table):
-        # data = list(get_slice(50, data))
+    def save_data(self, raw_data, table):
+        data_sets = list(get_slice(SLICE_LENGTH, raw_data))
 
         with self.pg_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-            column_names = [field.name for field in fields(data[0])]
-            column_names_str = ",".join(column_names)
-            col_count = ", ".join(["%s"] * len(column_names))
-            bind_values = ",".join(
-                cur.mogrify(f"({col_count})", astuple(x)).decode("utf-8") for x in data
-            )
+            for data in data_sets:
+                column_names = [field.name for field in fields(data[0])]
+                column_names_str = ",".join(column_names)
+                col_count = ", ".join(["%s"] * len(column_names))
+                bind_values = ",".join(
+                    cur.mogrify(f"({col_count})", astuple(x)).decode("utf-8")
+                    for x in data
+                )
 
-            query = (
-                f"INSERT INTO content.{table} ({column_names_str}) VALUES {bind_values} "
-                f" ON CONFLICT (id) DO NOTHING"
-            )
-            cur.execute(query)
+                query = (
+                    f"INSERT INTO content.{table} ({column_names_str}) VALUES {bind_values} "
+                    f" ON CONFLICT (id) DO NOTHING"
+                )
+                cur.execute(query)
 
 
 class SQLiteExtractor:
