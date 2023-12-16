@@ -31,7 +31,7 @@ class FilmworkAdmin(admin.ModelAdmin):
     inlines = (GenreFilmworkInline, PersonFilmworkInline)
 
     list_display = (
-        # "title",
+        "title",
         "type",
         "creation_date",
         "rating",
