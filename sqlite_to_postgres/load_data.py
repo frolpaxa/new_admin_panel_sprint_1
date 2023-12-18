@@ -1,111 +1,38 @@
+import os
 import sqlite3
-import uuid
-from dataclasses import dataclass, fields, astuple
 import sys
-from contextlib import closing
-from datetime import datetime
 
 import psycopg2
+from dotenv import load_dotenv
 from psycopg2.extensions import connection as _connection
-from psycopg2.extras import DictCursor
+
+sys.path.append("..")
+
+from sqlite_to_postgres.loaders import (
+    PostgresSaver,
+    SQLiteExtractor,
+    pg_context,
+    sqlite_context,
+)
+from sqlite_to_postgres.models import (
+    Genre,
+    GenreFilmWork,
+    Movie,
+    Person,
+    PersonFilmWork,
+)
+
+load_dotenv()
 
 PG_DSN = {
-    "dbname": "movies_database",
-    "user": "app",
-    "password": "123qwe",
+    "dbname": os.environ.get("DB_NAME"),
+    "user": os.environ.get("DB_USER"),
+    "password": os.environ.get("DB_PASSWORD"),
     "host": "127.0.0.1",
     "port": 5432,
 }
 
 SQLITE_DB_PATH = "db.sqlite"
-SLICE_LENGTH = 50
-
-
-@dataclass
-class Movie:
-    id: uuid.UUID
-    title: str
-    description: str
-    creation_date: datetime
-    rating: float
-    type: str
-    created_at: datetime
-    updated_at: datetime
-    file_path: str
-
-
-@dataclass
-class Genre:
-    id: uuid.UUID
-    name: str
-    description: str
-    created_at: datetime
-    updated_at: datetime
-
-
-@dataclass
-class Person:
-    id: uuid.UUID
-    full_name: str
-    created_at: datetime
-    updated_at: datetime
-
-
-@dataclass
-class GenreFilmWork:
-    id: uuid.UUID
-    film_work_id: str
-    genre_id: str
-    created_at: datetime
-
-
-@dataclass
-class PersonFilmWork:
-    id: uuid.UUID
-    film_work_id: str
-    person_id: str
-    role: str
-    created_at: datetime
-
-
-def get_slice(slice, data):
-    for i in range(0, len(data), slice):
-        yield data[i : i + slice]
-
-
-class PostgresSaver:
-    def __init__(self, pg_conn: _connection) -> None:
-        self.pg_conn = pg_conn
-
-    def save_data(self, raw_data, table):
-        data_sets = list(get_slice(SLICE_LENGTH, raw_data))
-
-        with self.pg_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-            for data in data_sets:
-                column_names = [field.name for field in fields(data[0])]
-                column_names_str = ",".join(column_names)
-                col_count = ", ".join(["%s"] * len(column_names))
-                bind_values = ",".join(
-                    cur.mogrify(f"({col_count})", astuple(x)).decode("utf-8")
-                    for x in data
-                )
-
-                query = (
-                    f"INSERT INTO content.{table} ({column_names_str}) VALUES {bind_values} "
-                    f" ON CONFLICT (id) DO NOTHING"
-                )
-                cur.execute(query)
-
-
-class SQLiteExtractor:
-    def __init__(self, connection: sqlite3.Connection) -> None:
-        self.connection = connection
-        self.connection.row_factory = sqlite3.Row
-
-    def extract_data(self, table):
-        with closing(self.connection.cursor()) as cur:
-            cur.execute(f"SELECT * FROM {table};")
-            return [dict(x) for x in cur.fetchall()]
 
 
 def load_from_sqlite(connection: sqlite3.Connection, pg_conn: _connection):
@@ -123,15 +50,18 @@ def load_from_sqlite(connection: sqlite3.Connection, pg_conn: _connection):
     sqlite_extractor = SQLiteExtractor(connection)
 
     for table, mapper in tables.items():
-        data = [mapper(**x) for x in sqlite_extractor.extract_data(table)]
-        postgres_saver.save_data(data, table)
+        limit, offset = 100, 0
+
+        while batch_data := sqlite_extractor.extract_data(table, limit, offset):
+            data = [mapper(**x) for x in batch_data]
+            postgres_saver.save_data(data, table)
+            offset = limit
+            limit *= 2
 
 
 if __name__ == "__main__":
-    try:
-        with sqlite3.connect(SQLITE_DB_PATH) as sqlite_conn, psycopg2.connect(
-            **PG_DSN, cursor_factory=DictCursor
-        ) as pg_conn:
+    with sqlite_context(SQLITE_DB_PATH) as sqlite_conn, pg_context(PG_DSN) as pg_conn:
+        try:
             load_from_sqlite(sqlite_conn, pg_conn)
-    except (sqlite3.DatabaseError, psycopg2.DatabaseError) as ex:
-        sys.exit(f"Database error: {ex}")
+        except (sqlite3.DatabaseError, psycopg2.DatabaseError) as ex:
+            sys.exit(f"Database error: {ex}")
