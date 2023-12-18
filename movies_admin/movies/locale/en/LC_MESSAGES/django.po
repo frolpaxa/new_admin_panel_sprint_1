@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-07 18:30+0000\n"
+"POT-Creation-Date: 2023-12-18 13:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,74 +17,87 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
 #: movies/apps.py:8
 msgid "Movies"
 msgstr ""
 
-#: movies/models.py:23
-msgid "name"
-msgstr ""
-
-#: movies/models.py:24
-msgid "description"
-msgstr ""
-
-#: movies/models.py:28 movies/models.py:42 movies/models.py:63
-msgid "genre"
-msgstr ""
-
-#: movies/models.py:29 movies/models.py:43
-msgid "genres"
-msgstr ""
-
-#: movies/models.py:50
-msgid "full name"
-msgstr ""
-
-#: movies/models.py:54 movies/models.py:73
+#: movies/models.py:23 movies/models.py:66 movies/models.py:88
 msgid "actor"
 msgstr ""
 
-#: movies/models.py:55 movies/models.py:74
+#: movies/models.py:24
+msgid "Director"
+msgstr ""
+
+#: movies/models.py:25
+msgid "Writer"
+msgstr ""
+
+#: movies/models.py:29
+msgid "name"
+msgstr ""
+
+#: movies/models.py:30
+msgid "description"
+msgstr ""
+
+#: movies/models.py:34 movies/models.py:44 movies/models.py:50
+msgid "genre"
+msgstr ""
+
+#: movies/models.py:35 movies/models.py:51
+msgid "genres"
+msgstr ""
+
+#: movies/models.py:62
+msgid "full name"
+msgstr ""
+
+#: movies/models.py:67 movies/models.py:89
 msgid "actors"
 msgstr ""
 
-#: movies/models.py:66
+#: movies/models.py:76
 msgid "person"
 msgstr ""
 
-#: movies/models.py:68
+#: movies/models.py:79
 msgid "Role"
 msgstr ""
 
-#: movies/models.py:81
+#: movies/models.py:100
 msgid "Movie"
 msgstr ""
 
-#: movies/models.py:82
+#: movies/models.py:101
 msgid "TV Show"
 msgstr ""
 
-#: movies/models.py:86 movies/models.py:87
+#: movies/models.py:105 movies/models.py:106
 msgid "title"
 msgstr ""
 
-#: movies/models.py:88
+#: movies/models.py:108
 msgid "creation date"
 msgstr ""
 
-#: movies/models.py:90
+#: movies/models.py:111
 msgid "rating"
 msgstr ""
 
-#: movies/models.py:95
+#: movies/models.py:117
 msgid "type"
 msgstr ""
 
-#: movies/models.py:105
+#: movies/models.py:124
+msgid "File path"
+msgstr ""
+
+#: movies/models.py:128
 msgid "work"
 msgstr ""
 
-#: movies/models.py:106
+#: movies/models.py:129
 msgid "works"
 msgstr ""
